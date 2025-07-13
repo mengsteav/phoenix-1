@@ -1,150 +1,133 @@
+# Save the latest, verified, updated version of the Phoenix assistant code
+final_html_code = """
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>פיניקס – העוזר החכם שלך</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0d1117;
+      color: #fff;
     }
-    #phoenix-chat-btns {
+    #chat-container {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 9999;
-    }
-    .phoenix-btn {
-      background: #FF8C00;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    #phoenix-chat {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 320px;
-      max-height: 400px;
-      background: #1e1e1e;
-      color: #f1f1f1;
+      width: 350px;
+      height: 500px;
+      background: #161b22;
       border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      font-family: Arial;
-      display: none;
+      box-shadow: 0 0 20px rgba(255,106,0,0.4);
+      display: flex;
       flex-direction: column;
+      overflow: hidden;
       z-index: 9999;
     }
-    #phoenix-chat-header {
+    #chat-header {
       background: #ff6a00;
-      color: white;
-      padding: 12px;
-      border-radius: 16px 16px 0 0;
+      padding: 14px;
+      font-size: 18px;
       font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      text-align: center;
     }
-    #phoenix-chat-header img {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-    }
-    #phoenix-chat-messages {
+    #chat-messages {
       flex: 1;
+      padding: 12px;
       overflow-y: auto;
-      padding: 10px;
+      font-size: 15px;
+      line-height: 1.6;
     }
-    #phoenix-chat-input {
+    #chat-input {
       display: flex;
-      border-top: 1px solid #444;
+      border-top: 1px solid #30363d;
     }
-    #phoenix-chat-input input {
+    #chat-input input {
       flex: 1;
-      background: #2e2e2e;
-      color: #fff;
+      padding: 12px;
       border: none;
-      padding: 10px;
-      border-bottom-left-radius: 16px;
+      outline: none;
+      background: #21262d;
+      color: #fff;
+      font-size: 15px;
     }
-    #phoenix-chat-input button {
+    #chat-input button {
+      padding: 12px 18px;
+      border: none;
       background: #ff6a00;
       color: white;
-      border: none;
-      padding: 10px 16px;
-      border-bottom-right-radius: 16px;
       cursor: pointer;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div id="phoenix-chat-btns">
-    <button class="phoenix-btn" onclick="openPhoenix('generic')">🧠 עוזר חכם</button>
-    <button class="phoenix-btn" onclick="openPhoenix('code')">👨‍💻 קידוד ופיתוח</button>
-    <button class="phoenix-btn" onclick="openPhoenix('support')">❤️ תמיכה אישית</button>
-    <button class="phoenix-btn" onclick="openPhoenix('community')">👥 קהילה</button>
-    <button class="phoenix-btn" onclick="openPhoenix('trainer')">🏋️ תוכנית אימונים</button>
-  </div>
 
-  <div id="phoenix-chat">
-    <div id="phoenix-chat-header">
-      <img src="https://i.imgur.com/NsMaCQU.png" alt="פיניקס"/>
-      <span>🦅 פיניקס</span>
-    </div>
-    <div id="phoenix-chat-messages"></div>
-    <div id="phoenix-chat-input">
-      <input type="text" placeholder="כתוב שאלה..." id="phoenix-input"/>
-      <button onclick="sendPhoenixMessage()">שלח</button>
-    </div>
+<div id="chat-container">
+  <div id="chat-header">🦅 פיניקס – העוזר החכם שלך</div>
+  <div id="chat-messages"></div>
+  <div id="chat-input">
+    <input type="text" id="user-input" placeholder="כתוב כאן..." />
+    <button onclick="sendMessage()">שלח</button>
   </div>
+</div>
 
-  <script>
-    async function askPhoenix(message) {
+<script>
+  const messages = document.getElementById("chat-messages");
+  const input = document.getElementById("user-input");
+  let username = null;
+
+  const appendMessage = (sender, text) => {
+    const msg = document.createElement("div");
+    msg.innerHTML = `<b>${sender}:</b> ${text}`;
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+  };
+
+  const askPhoenix = async (message) => {
+    try {
       const res = await fetch("https://phoenix-chat.live.workers.dev", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message })
       });
       const data = await res.json();
       return data.reply;
+    } catch (e) {
+      return "מצטער, הייתה בעיה זמנית. נסה שוב.";
+    }
+  };
+
+  const sendMessage = async () => {
+    const text = input.value.trim();
+    if (!text) return;
+    appendMessage("אתה", text);
+    input.value = "";
+
+    if (!username && text.includes("אני")) {
+      const parts = text.split("אני");
+      if (parts.length > 1) {
+        username = parts[1].trim().split(" ")[0];
+        appendMessage("פיניקס", `שלום ${username}! איך אפשר לעזור?`);
+        return;
+      }
     }
 
-    let currentMode = null;
+    const reply = await askPhoenix(username ? `${username}: ${text}` : text);
+    appendMessage("פיניקס", reply);
+  };
 
-    async function openPhoenix(mode) {
-      currentMode = mode;
-      const chat = document.getElementById("phoenix-chat");
-      const msgs = document.getElementById("phoenix-chat-messages");
-      msgs.innerHTML = '';
-      chat.style.display = 'flex';
-      const intros = {
-        generic: 'היי! אני פיניקס, העוזר החכם שלך.\nבמה אוכל לעזור לך היום?',
-        code: 'מעולה! ספר לי מה אתה מנסה לפתח –\nאני כאן לעזור לך עם קוד, רעיונות או כל שאלה שיש לך 💡',
-        support: 'אני כאן בשבילך.\nרוצה לספר לי מה עובר עליך או במה אתה צריך תמיכה?',
-        community: 'ברוך הבא לקהילה! אני שמח שבחרת להצטרף 🙌\nתרצה להתחבר לאנשים דומים?',
-        trainer: 'היי, אני פיניקס – המאמן האישי שלך 🔥\nבוא נבנה יחד תוכנית אימונים שתתאים בדיוק לך. אני אשאל אותך כמה שאלות קצרות 💪'
-      };
-      msgs.innerHTML += `<div><b>פיניקס:</b> ${intros[mode]}</div>`;
-    }
+  appendMessage("פיניקס", "שלום וברוך הבא! איך קוראים לך?");
+</script>
 
-    async function sendPhoenixMessage() {
-      const input = document.getElementById("phoenix-input");
-      const msg = input.value;
-      if (!msg) return;
-      const msgs = document.getElementById("phoenix-chat-messages");
-      msgs.innerHTML += `<div><b>אתה:</b> ${msg}</div>`;
-      input.value = '';
-      const reply = await askPhoenix(msg);
-      msgs.innerHTML += `<div><b>פיניקס:</b> ${reply}</div>`;
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-  </script>
 </body>
 </html>
+"""
+
+final_file_path = "/mnt/data/phoenix_final_index.html"
+with open(final_file_path, "w", encoding="utf-8") as f:
+    f.write(final_html_code)
+
+final_file_path
